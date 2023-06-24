@@ -10,7 +10,9 @@ public class AtlasConfig extends MidnightConfig {
 	@Entry public static boolean fishingHookKB = false;
 	@Entry public static boolean fistDamage = false;
 	@Entry public static boolean swordBlocking = false;
+	@Entry public static boolean sprintCritsEnabled = true;
 	@Entry public static boolean saturationHealing = false;
+	@Entry public static boolean configOnlyWeapons = false;
 	@Entry public static boolean autoAttackAllowed = true;
 	@Entry public static boolean axeReachBuff = false;
 	@Entry public static boolean blockReach = true;
@@ -31,6 +33,7 @@ public class AtlasConfig extends MidnightConfig {
 	@Entry(min=0,max=4) public static float bowUncertainty = 0.25F;
 	@Entry(min = 0, max = 1000) public static float swordAttackDamage = 1;
 	@Entry(min = 0, max = 1000) public static float axeAttackDamage = 2;
+	@Entry(min = 0, max = 1000) public static float knifeAttackDamage = 0;
 	@Entry(min = 0, max = 1000) public static float baseHoeAttackDamage = 0;
 	@Entry(min = 0, max = 1000) public static float ironDiaHoeAttackDamage = 1;
 	@Entry(min = 0, max = 1000) public static float netheriteHoeAttackDamage = 2;
@@ -53,6 +56,9 @@ public class AtlasConfig extends MidnightConfig {
 
 	@Entry(min = -1, max = 7.5)
 	public static float goldDiaNethHoeAttackSpeed = 1;
+
+	@Entry(min = -1, max = 7.5)
+	public static float knifeAttackSpeed = 1;
 
 	@Entry(min = -1, max = 7.5)
 	public static float tridentAttackSpeed = -0.5F;

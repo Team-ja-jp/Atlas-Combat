@@ -20,8 +20,10 @@ public class NetworkingHandler {
 			packetBuf.writeBoolean(AtlasConfig.fishingHookKB);
 			packetBuf.writeBoolean(AtlasConfig.fistDamage);
 			packetBuf.writeBoolean(AtlasConfig.swordBlocking);
+			packetBuf.writeBoolean(AtlasConfig.sprintCritsEnabled);
 			packetBuf.writeBoolean(AtlasConfig.saturationHealing);
 			packetBuf.writeBoolean(AtlasConfig.autoAttackAllowed);
+			packetBuf.writeBoolean(AtlasConfig.configOnlyWeapons);
 			packetBuf.writeBoolean(AtlasConfig.axeReachBuff);
 			packetBuf.writeBoolean(AtlasConfig.blockReach);
 			packetBuf.writeBoolean(AtlasConfig.attackReach);
@@ -41,6 +43,7 @@ public class NetworkingHandler {
 			packetBuf.writeFloat(AtlasConfig.bowUncertainty);
 			packetBuf.writeFloat(AtlasConfig.swordAttackDamage);
 			packetBuf.writeFloat(AtlasConfig.axeAttackDamage);
+			packetBuf.writeFloat(AtlasConfig.knifeAttackDamage);
 			packetBuf.writeFloat(AtlasConfig.baseHoeAttackDamage);
 			packetBuf.writeFloat(AtlasConfig.ironDiaHoeAttackDamage);
 			packetBuf.writeFloat(AtlasConfig.netheriteHoeAttackDamage);
@@ -51,6 +54,7 @@ public class NetworkingHandler {
 			packetBuf.writeFloat(AtlasConfig.stoneHoeAttackSpeed);
 			packetBuf.writeFloat(AtlasConfig.ironHoeAttackSpeed);
 			packetBuf.writeFloat(AtlasConfig.goldDiaNethHoeAttackSpeed);
+			packetBuf.writeFloat(AtlasConfig.knifeAttackSpeed);
 			packetBuf.writeFloat(AtlasConfig.tridentAttackSpeed);
 			packetBuf.writeFloat(AtlasConfig.defaultAttackSpeed);
 			packetBuf.writeFloat(AtlasConfig.slowestToolAttackSpeed);

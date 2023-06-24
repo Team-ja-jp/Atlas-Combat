@@ -66,8 +66,6 @@ public abstract class MinecraftMixin implements IMinecraft {
 	protected abstract boolean startAttack();
 	@Shadow
 	public abstract void startUseItem();
-	@Shadow
-	public abstract @org.jetbrains.annotations.Nullable Entity getCameraEntity();
 
 	@Shadow
 	@org.jetbrains.annotations.Nullable
@@ -80,18 +78,8 @@ public abstract class MinecraftMixin implements IMinecraft {
 	Entity lastPickedEntity = null;
 
 	@Shadow
-	@Final
-	public ParticleEngine particleEngine;
-
-	@Shadow
-	public abstract void setConnectedToRealms(boolean b);
-
-	@Shadow
 	@Nullable
 	public Screen screen;
-
-	@Shadow
-	public abstract void stop();
 
 	@Inject(method = "tick", at = @At(value = "TAIL"))
 	public void injectSomething(CallbackInfo ci) {
@@ -104,7 +92,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@ModifyExpressionValue(method = "handleKeybinds",
 			slice = @Slice(
-					from = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0)
+				from = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0)
 			),
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;consumeClick()Z", ordinal = 0))
 	public boolean allowBlockHitting(boolean original) {
@@ -132,8 +120,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;releaseUsingItem(Lnet/minecraft/world/entity/player/Player;)V"))
 	public void checkIfCrouch(MultiPlayerGameMode instance, Player player) {
-		if(((PlayerExtensions) player).hasEnabledShieldOnCrouch() && player.isCrouching()) {
-		} else {
+		if(!((PlayerExtensions) player).hasEnabledShieldOnCrouch() || !player.isCrouching()) {
 			instance.releaseUsingItem(player);
 		}
 	}
@@ -159,79 +146,51 @@ public abstract class MinecraftMixin implements IMinecraft {
 		}
 		return startAttack();
 	}
-	@Inject(method = "startAttack", at = @At(value = "HEAD"), cancellable = true)
+	@Inject(method = "startAttack", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;hitResult:Lnet/minecraft/world/phys/HitResult;", ordinal = 1))
 	private void startAttack(CallbackInfoReturnable<Boolean> cir) {
-		if(missTime < 0) {
-			cir.setReturnValue(false);
-			cir.cancel();
-		}else if (this.hitResult == null) {
-			LOGGER.error("Null returned as 'hitResult', this shouldn't happen!");
-			if (this.gameMode.hasMissTime()) {
-				this.missTime = 10;
-			}
-
-			cir.setReturnValue(false);
-			cir.cancel();
-		}else if (this.player.isHandsBusy()) {
-			cir.setReturnValue(false);
-			cir.cancel();
+		this.retainAttack = false;
+	}
+	@Redirect(method = "startAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;attack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;)V"))
+	public void redirectAttack(MultiPlayerGameMode instance, Player player, Entity entity) {
+		if (player.distanceTo(entity) <= ((PlayerExtensions)player).getAttackRange(player, 2.5)) {
+			instance.attack(player, entity);
 		} else {
-			this.retainAttack = false;
-			boolean bl = false;
-			switch (redirectResult(this.hitResult).getType()) {
-				case ENTITY:
-					if (player.distanceTo(((EntityHitResult)hitResult).getEntity()) <= ((PlayerExtensions)player).getAttackRange(player, 2.5)) {
-						this.gameMode.attack(this.player, ((EntityHitResult) this.hitResult).getEntity());
-					} else {
-						((IPlayerGameMode)gameMode).swingInAir(player);
-					}
-					break;
-				case BLOCK:
-					BlockHitResult blockHitResult = (BlockHitResult)this.hitResult;
-					BlockPos blockPos = blockHitResult.getBlockPos();
-					if (!this.level.getBlockState(blockPos).isAir()) {
-						this.gameMode.startDestroyBlock(blockPos, blockHitResult.getDirection());
-						if (this.level.getBlockState(blockPos).isAir()) {
-							bl = true;
-						}
-						break;
-					}
-				case MISS:
-					EntityHitResult result = findEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
-					if(result != null && AtlasConfig.refinedCoyoteTime) {
-						if(!(result.getEntity() instanceof Player)) {
-							if (result.getEntity() instanceof Guardian
-									|| result.getEntity() instanceof Cat
-									|| result.getEntity() instanceof Vex
-									|| (result.getEntity() instanceof LivingEntity entity && entity.isBaby())
-									|| result.getEntity() instanceof Fox
-									|| result.getEntity() instanceof Bee
-									|| result.getEntity() instanceof Bat
-									|| result.getEntity() instanceof AbstractFish
-									|| result.getEntity() instanceof Rabbit) {
-								result = findEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
-							} else {
-								result = findNormalEntity(player, 1.0F, ((PlayerExtensions) player).getAttackRange(player, 2.5));
-							}
-							if(result != null) {
-								this.gameMode.attack(this.player, result.getEntity());
-							} else {
-								((IPlayerGameMode)gameMode).swingInAir(player);
-							}
-						} else {
-							((IPlayerGameMode)gameMode).swingInAir(player);
-						}
-					} else {
-						((IPlayerGameMode)gameMode).swingInAir(player);
-					}
-			}
-
-			this.player.swing(InteractionHand.MAIN_HAND);
-			cir.setReturnValue(bl);
-			cir.cancel();
+			((IPlayerGameMode)instance).swingInAir(player);
 		}
-		cir.setReturnValue(false);
-		cir.cancel();
+	}
+	@ModifyExpressionValue(method = "startAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasMissTime()Z"))
+	public boolean removeMissTime(boolean original) {
+		return false;
+	}
+	@Redirect(method = "startAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;resetAttackStrengthTicker()V"))
+	public void redirectReset(LocalPlayer player) {
+		EntityHitResult result = findEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
+		if(result != null && AtlasConfig.refinedCoyoteTime) {
+			if(!(result.getEntity() instanceof Player)) {
+				if (result.getEntity() instanceof Guardian
+					|| result.getEntity() instanceof Cat
+					|| result.getEntity() instanceof Vex
+					|| (result.getEntity() instanceof LivingEntity entity && entity.isBaby())
+					|| result.getEntity() instanceof Fox
+					|| result.getEntity() instanceof Bee
+					|| result.getEntity() instanceof Bat
+					|| result.getEntity() instanceof AbstractFish
+					|| result.getEntity() instanceof Rabbit) {
+					result = findEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
+				} else {
+					result = findNormalEntity(player, 1.0F, ((PlayerExtensions) player).getAttackRange(player, 2.5));
+				}
+				if(result != null) {
+					this.gameMode.attack(player, result.getEntity());
+				} else {
+					((IPlayerGameMode)gameMode).swingInAir(player);
+				}
+			} else {
+				((IPlayerGameMode)gameMode).swingInAir(player);
+			}
+		} else {
+			((IPlayerGameMode)gameMode).swingInAir(player);
+		}
 	}
 	@Override
 	public final HitResult redirectResult(HitResult instance) {
@@ -245,7 +204,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 				crosshairPickEntity = entity;
 				hitResult = rayTraceResult;
 				return hitResult;
-			}else {
+			} else {
 				return instance;
 			}
 
@@ -384,7 +343,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 							player,
 							from,
 							to,
-							new AABB(from, to.add(i * (strengthMultiplier / 100), j * (strengthMultiplier / 100), k * (strengthMultiplier / 100))),
+							new AABB(from, to.add(i * (strengthMultiplier / 100F), j * (strengthMultiplier / 100F), k * (strengthMultiplier / 100F))),
 							EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e -> e != null
 									&& e.isPickable()
 									&& e instanceof LivingEntity)
@@ -427,7 +386,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 							player,
 							from,
 							to,
-							new AABB(from, to.add(i * (strengthMultiplier / 100), j * (strengthMultiplier / 100), k * (strengthMultiplier / 100))),
+							new AABB(from, to.add(i * (strengthMultiplier / 100F), j * (strengthMultiplier / 100F), k * (strengthMultiplier / 100F))),
 							EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e -> e != null
 									&& e.isPickable()
 									&& e instanceof LivingEntity)

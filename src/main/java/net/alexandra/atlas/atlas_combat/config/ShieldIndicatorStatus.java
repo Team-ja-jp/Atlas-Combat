@@ -15,7 +15,7 @@ public enum ShieldIndicatorStatus {
 
 	private static final ShieldIndicatorStatus[] BY_ID = Arrays.stream(values())
 		.sorted(Comparator.comparingInt(ShieldIndicatorStatus::getId))
-		.toArray(i -> new ShieldIndicatorStatus[i]);
+		.toArray(ShieldIndicatorStatus[]::new);
 	private final int id;
 	private final String key;
 

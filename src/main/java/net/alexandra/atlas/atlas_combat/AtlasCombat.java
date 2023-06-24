@@ -3,6 +3,7 @@ package net.alexandra.atlas.atlas_combat;
 import eu.midnightdust.lib.config.MidnightConfig;
 import net.alexandra.atlas.atlas_combat.config.AtlasConfig;
 import net.alexandra.atlas.atlas_combat.extensions.ItemExtensions;
+import net.alexandra.atlas.atlas_combat.item.ItemRegistry;
 import net.alexandra.atlas.atlas_combat.networking.NetworkingHandler;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Position;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DispenserBlock;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class AtlasCombat implements ModInitializer {
 
 		DispenserBlock.registerBehavior(Items.TRIDENT, new AbstractProjectileDispenseBehavior() {
 			@Override
-			protected Projectile getProjectile(Level world, Position position, ItemStack stack) {
+			protected @NotNull Projectile getProjectile(Level world, Position position, ItemStack stack) {
 				ThrownTrident trident = new ThrownTrident(EntityType.TRIDENT, world);
 				trident.tridentItem = stack.copy();
 				trident.setPosRaw(position.x(), position.y(), position.z());
@@ -40,6 +42,9 @@ public class AtlasCombat implements ModInitializer {
 				return trident;
 			}
 		});
+		if (AtlasConfig.configOnlyWeapons) {
+			ItemRegistry.registerWeapons();
+		}
 		List<Item> items = Registry.ITEM.stream().toList();
 
 		for(Item item : items) {

@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id 'fabric-loom' version '1.2-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -48,12 +48,17 @@ dependencies {
 	include("com.github.Chocohead:Fabric-ASM:v${rootProject.fabric_asm_version}")
 	include(modImplementation('com.github.rizecookey:CookeyMod:1.7.0+1.18.2'))
 	modApi "com.terraformersmc:modmenu:3.2.3"
-	annotationProcessor(include(implementation("com.github.LlamaLad7:MixinExtras:0.1.1")))
+	include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0-beta.8")))
 	modImplementation include ("maven.modrinth:midnightlib:${project.midnightlib_version}")
 }
 
 loom {
 	accessWidenerPath = file("src/main/resources/atlas_combat.accesswidener")
+}
+configurations.all {
+	resolutionStrategy {
+		force("net.fabricmc:fabric-loader:${project.loader_version}")
+	}
 }
 
 processResources {

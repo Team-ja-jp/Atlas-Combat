@@ -39,24 +39,22 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 	@Inject(method = "tick", at = @At("HEAD"))
 	public void injectSneakShield(CallbackInfo ci) {
 		if(thisPlayer.isOnGround()) {
-			if (this.hasEnabledShieldOnCrouch() && thisPlayer.isCrouching() && !thisPlayer.isUsingItem()) {
+			if(thisPlayer.isOnGround() && this.hasEnabledShieldOnCrouch()) {
 				for (InteractionHand interactionHand : InteractionHand.values()) {
-					ItemStack itemStack = ((LivingEntityExtensions)this.thisPlayer).getBlockingItem();
-					if (!itemStack.isEmpty() && itemStack.getItem() instanceof ShieldItem shieldItem && thisPlayer.isCrouching() && thisPlayer.getItemInHand(interactionHand) == itemStack) {
-						if(!thisPlayer.getCooldowns().isOnCooldown(shieldItem)) {
-							((IMinecraft) minecraft).startUseItem(interactionHand);
-							if (lowShieldEnabled()) {
+					if (thisPlayer.isCrouching() && !thisPlayer.isUsingItem()) {
+						ItemStack itemStack = ((LivingEntityExtensions) this.thisPlayer).getBlockingItem();
+						if (!itemStack.isEmpty() && itemStack.getItem() instanceof ShieldItem shieldItem && thisPlayer.isCrouching() && thisPlayer.getItemInHand(interactionHand) == itemStack) {
+							if (!thisPlayer.getCooldowns().isOnCooldown(shieldItem)) {
+								((IMinecraft) minecraft).startUseItem(interactionHand);
 								minecraft.gameRenderer.itemInHandRenderer.itemUsed(interactionHand);
 							}
 						}
-					}
-				}
-			} else if ((this.hasEnabledShieldOnCrouch() && thisPlayer.isUsingItem() && minecraft.options.keyShift.consumeClick() && !minecraft.options.keyShift.isDown()) && !minecraft.options.keyUse.isDown()) {
-				for (InteractionHand interactionHand : InteractionHand.values()) {
-					ItemStack itemStack = this.thisPlayer.getItemInHand(interactionHand);
-					if (!itemStack.isEmpty() && (itemStack.getItem() instanceof ShieldItem)) {
-						minecraft.gameMode.releaseUsingItem(thisPlayer);
-						startedUsingItem = false;
+					} else if ((thisPlayer.isUsingItem() && minecraft.options.keyShift.consumeClick() && !minecraft.options.keyShift.isDown()) && !minecraft.options.keyUse.isDown()) {
+						ItemStack itemStack = this.thisPlayer.getItemInHand(interactionHand);
+						if (!itemStack.isEmpty() && (itemStack.getItem() instanceof ShieldItem)) {
+							minecraft.gameMode.releaseUsingItem(thisPlayer);
+							startedUsingItem = false;
+						}
 					}
 				}
 			}
@@ -96,7 +94,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 			}
 
 			float var3 = this.oAttackAnim + var2 * tickDelta;
-			return var3 > 0.4F && this.getAttackStrengthScale(tickDelta) < 1.95F ? 0.4F + 0.6F * (float)Math.pow((double)((var3 - 0.4F) / 0.6F), 4.0) : var3;
+			return var3 > 0.4F && this.getAttackStrengthScale(tickDelta) < 1.95F ? 0.4F + 0.6F * (float)Math.pow((var3 - 0.4F) / 0.6F, 4.0) : var3;
 		}
 		float f = this.attackAnim - this.oAttackAnim;
 		if (f < 0.0F) {
@@ -110,9 +108,5 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 	@Environment(EnvType.CLIENT)
 	public boolean hasEnabledShieldOnCrouch() {
 		return ((IOptions)minecraft.options).shieldCrouch();
-	}
-	@Environment(EnvType.CLIENT)
-	public boolean lowShieldEnabled() {
-		return ((IOptions)minecraft.options).lowShield();
 	}
 }
