@@ -22,8 +22,7 @@ public class ServerGamePacketMixin {
 	}
 
 	@ModifyExpressionValue(
-		method = "handleInteract",
-		require = 1, allow = 1, at = @At(value = "CONSTANT", args = "doubleValue=36.0"))
+		method = "handleInteract", at = @At(value = "CONSTANT", args = "doubleValue=36.0"))
 	private double getActualAttackRange(final double reachDistance) {
 		return ((PlayerExtensions)player).getSquaredReach(player, Mth.square(Math.sqrt(reachDistance) - 1));
 	}
