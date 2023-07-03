@@ -80,6 +80,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 
 	@Inject(method = "tick", at = @At(value = "TAIL"))
 	public void injectSomething(CallbackInfo ci) {
+		assert player != null;
 		if(crosshairPickEntity != null && hitResult != null && (this.hitResult).distanceTo(this.crosshairPickEntity) <= ((PlayerExtensions)player).getAttackRange(player, 2.5)) {
 			lastPickedEntity = crosshairPickEntity;
 		}
@@ -95,7 +96,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	public boolean allowBlockHitting(boolean original) {
 		if (!original) return false;
 		assert player != null;
-		boolean bl = !(player.getUseItem().getItem() instanceof ShieldItem);
+		boolean bl = !(player.getUseItem().getItem() instanceof IShieldItem shieldItem && !shieldItem.getBlockingType().canBlockHit());
 		if(bl && ((PlayerExtensions) this.player).isAttackAvailable(0.0F)) {
 			assert hitResult != null;
 			if (hitResult.getType() == HitResult.Type.BLOCK) {
@@ -106,6 +107,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z", ordinal = 2))
 	public void checkIfCrouch(CallbackInfo ci) {
+		assert player != null;
 		if(((PlayerExtensions) player).hasEnabledShieldOnCrouch() && player.isCrouching()) {
 			while(options.keyUse.consumeClick()) {
 				startUseItem();
@@ -117,7 +119,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;releaseUsingItem(Lnet/minecraft/world/entity/player/Player;)V"))
 	public void checkIfCrouch(MultiPlayerGameMode instance, Player player) {
-		if(!((PlayerExtensions) player).hasEnabledShieldOnCrouch() || !player.isCrouching()) {
+		if(!((PlayerExtensions) player).hasEnabledShieldOnCrouch() || !player.isCrouching() || !(((LivingEntityExtensions)player).getBlockingItem().getItem() instanceof IShieldItem shieldItem && shieldItem.getBlockingType().canCrouchBlock())) {
 			instance.releaseUsingItem(player);
 		}
 	}
@@ -130,6 +132,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 		assert hitResult != null;
 		HitResult newResult = redirectResult(hitResult);
 		this.hitResult = newResult == null ? hitResult : newResult;
+		assert player != null;
 		if (!((PlayerExtensions) this.player).isAttackAvailable(0.0F)) {
 			if (hitResult.getType() != HitResult.Type.BLOCK) {
 				float var1 = this.player.getAttackStrengthScale(0.0F);
@@ -163,6 +166,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@Redirect(method = "startAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;resetAttackStrengthTicker()V"))
 	public void redirectReset(LocalPlayer player) {
+		assert gameMode != null;
 		EntityHitResult result = findEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
 		if(result != null && AtlasConfig.refinedCoyoteTime) {
 			if(!(result.getEntity() instanceof Player)) {
@@ -196,7 +200,9 @@ public abstract class MinecraftMixin implements IMinecraft {
 		if(instance.getType() == HitResult.Type.BLOCK) {
 			BlockHitResult blockHitResult = (BlockHitResult)instance;
 			BlockPos blockPos = blockHitResult.getBlockPos();
+			assert level != null;
 			boolean bl = !level.getBlockState(blockPos).canOcclude() && !level.getBlockState(blockPos).getBlock().hasCollision;
+			assert player != null;
 			EntityHitResult rayTraceResult = rayTraceEntity(player, 1.0F, ((PlayerExtensions)player).getAttackRange(player, 2.5));
 			Entity entity = rayTraceResult != null ? rayTraceResult.getEntity() : null;
 			if (entity != null && bl) {
@@ -213,6 +219,8 @@ public abstract class MinecraftMixin implements IMinecraft {
 	@Unique
 	@Override
 	public final void startUseItem(InteractionHand interactionHand) {
+		assert gameMode != null;
+		assert player != null;
 		if (!gameMode.isDestroying()) {
 			this.rightClickDelay = 4;
 			if (!this.player.isHandsBusy()) {
@@ -412,6 +420,7 @@ public abstract class MinecraftMixin implements IMinecraft {
 	}
 	@Inject(method = "continueAttack", at = @At(value = "HEAD"), cancellable = true)
 	private void continueAttack(boolean bl, CallbackInfo ci) {
+		assert player != null;
 		if (missTime <= 0 && !this.player.isUsingItem()) {
 			if (bl && this.hitResult != null && this.hitResult.getType() == HitResult.Type.BLOCK) {
 				this.retainAttack = false;

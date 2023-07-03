@@ -43,15 +43,15 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 				for (InteractionHand interactionHand : InteractionHand.values()) {
 					if (thisPlayer.isCrouching() && !thisPlayer.isUsingItem()) {
 						ItemStack itemStack = ((LivingEntityExtensions) this.thisPlayer).getBlockingItem();
-						if (!itemStack.isEmpty() && itemStack.getItem() instanceof ShieldItem shieldItem && thisPlayer.isCrouching() && thisPlayer.getItemInHand(interactionHand) == itemStack) {
-							if (!thisPlayer.getCooldowns().isOnCooldown(shieldItem)) {
+						if (!itemStack.isEmpty() && itemStack.getItem() instanceof IShieldItem shieldItem && shieldItem.getBlockingType().canCrouchBlock() && thisPlayer.isCrouching() && thisPlayer.getItemInHand(interactionHand) == itemStack) {
+							if (!thisPlayer.getCooldowns().isOnCooldown(itemStack.getItem())) {
 								((IMinecraft) minecraft).startUseItem(interactionHand);
 								minecraft.gameRenderer.itemInHandRenderer.itemUsed(interactionHand);
 							}
 						}
 					} else if ((thisPlayer.isUsingItem() && minecraft.options.keyShift.consumeClick() && !minecraft.options.keyShift.isDown()) && !minecraft.options.keyUse.isDown()) {
 						ItemStack itemStack = this.thisPlayer.getItemInHand(interactionHand);
-						if (!itemStack.isEmpty() && (itemStack.getItem() instanceof ShieldItem)) {
+						if (!itemStack.isEmpty() && (itemStack.getItem() instanceof IShieldItem shieldItem && shieldItem.getBlockingType().canCrouchBlock())) {
 							minecraft.gameMode.releaseUsingItem(thisPlayer);
 							startedUsingItem = false;
 						}
@@ -79,7 +79,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 		Item item = ((LivingEntityExtensions) thisPlayer).getBlockingItem().getItem();
 		if(thisPlayer.getCooldowns().isOnCooldown(item)) {
 			instance.tick(b);
-		} else if(item instanceof ShieldItem && !thisPlayer.getCooldowns().isOnCooldown(item)) {
+		} else if(item instanceof IShieldItem shieldItem && shieldItem.getBlockingType().canCrouchBlock() && !thisPlayer.getCooldowns().isOnCooldown(item)) {
 			instance.tick(false);
 		} else {
 			instance.tick(b);

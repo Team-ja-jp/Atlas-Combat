@@ -13,7 +13,6 @@
     "AxeItemMixin",
     "BowItemMixin",
     "DamageEnchantmentMixin",
-    "DetectedVersionMixin",
     "DiggerItemMixin",
     "EffectsMixin",
     "EggItemMixin",
@@ -47,8 +46,7 @@
     "SweepingEdgeEnchantmentMixin",
     "SwordItemMixin",
     "ThrownTridentMixin",
-    "TridentItemMixin",
-    "VersionMixin"
+    "TridentItemMixin"
   ],
   "injectors": {
     "defaultRequire": 1
