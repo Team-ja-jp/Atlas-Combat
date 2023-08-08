@@ -1,0 +1,7 @@
+{
+  "attribute.name.generic.attack_reach": "攻撃範囲",
+  "attribute.name.generic.block_reach": "ブロック干渉範囲",
+  "attribute.name.generic.shield_strength": "防御可能ダメージ",
+  "attribute.name.generic.sword_block_strength": "防御可能ダメージ",
+  "attribute.name.generic.longsword_piercing": "防具貫通"
+}
